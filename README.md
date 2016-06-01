@@ -26,16 +26,52 @@ Extract the zip archive and copy the LiskMonitor.ps1 file to it's final destinat
 
 I recommend saving it near root directory. For example: C:\SCRIPTS\LiskMonitor.ps1
 
-###***2 Configuration**
+###***2 Configuration, Manual Usage & Testing**
 ---------------
 
-Open the script in your favorite text editor.
+Open the script in your favorite text editor. Basic Notepad WILL work but not recommended.
 
 I recommend notepad++ available for free [HERE](https://notepad-plus-plus.org/).
 
-Go to the section named (around line #:
-Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!
+Scroll to line #81 "Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!"
 
+The configuration is splitted in 3 sub-sections:
+ - E-mail
+ - MainNet
+ - TestNet
+
+####The first thing to configure and test is e-mail sub-section.
+
+
+# Email List support multiple entries like this: @('email@domain.com','sms@domain.com','5556781212l@myphoneprovider.com')
+
+For the e-mail definition, you can use only 1 address for sender and recipient if you want.
+It's build that way to allow more granularity so everybody can customize the behavior to his/her need.
+Example:
+ - I put my home e-mail for the info
+ - I put my home and work e-mail for warning
+ - I put my home and work e-mail + email2sms for error
+ 
+email2sms note: Most phone provider have email2sms functionnality. Just check you probably already have an addres looking like 9995551212@YourPhoneProvider.com. It allow text e-mail sent to this address to be redirected as sms to your phone.
+
+
+Here is the list of variables and what they do, following is a screenshot of a final configuration example.
+ 
+$Config.Email.SenderEmail      This is the e-mail that will be used as sender by the script.
+$Config.Email.SenderSmtp       This is the domain or IP address the script will use as SMTP to send messages.
+
+$Config.Email.SendErrorMail    This allow to enable/disable the sending of errors messages. I don't recommand to disable it.
+$Config.Email.ErrorEmailList   
+
+$Config.Email.SendWarningMail  = $True
+$Config.Email.WarningEmailList = @('')
+
+$Config.Email.SendInfoMail     This allow to enable/disable the sending of infos messages. Once everything will work, you can safely disable it.
+$Config.Email.InfoEmailList    = @('') 
+ 
+ 
+ 
+ 
 In the "### Test | Activate / Deactivate" Sub-section
 
 In the "MainNet | Account" Sub-section
@@ -52,7 +88,7 @@ In the "" Sub-section
 
 Save and close the file.
 
-3 Manual Usage & Testing
+3 
 ------------------------
 
 Text text text text text
