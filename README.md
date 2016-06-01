@@ -1,8 +1,8 @@
  ![##Images_README_Header##](./PNG/Header.png)
 
-LiskMonitor is a stand-alone PowerShell script made 100% by me to do end-user monitoring on Lisk MainNet and TestNet nodes and delegates. It uses PowerShell so it run only on Windows but can monitor a node on any type of installation since it uses HTTP protocol to communicate with API. For hardcore Linux users or just people wanting more protection by running more than 1 instance of the script, don’t forget, am inexspansive Windows Server Box can do the job pretty well.
+LiskMonitor is a stand-alone PowerShell script to do end-user monitoring on Lisk MainNet and TestNet nodes and delegates. It uses PowerShell so it run only on Windows but can monitor a node on any type of installation since it uses HTTP protocol to communicate with API.
 
-This is v1.0.x.x of the script. Included features are:
+This is v1.0.0.x of the script. Included features are:
 
  - Monitoring Block Height of every provided nodes URLs.
  - Monitoring Last Forged Block Height of configured delegate on all provided nodes URLs.
@@ -10,6 +10,7 @@ This is v1.0.x.x of the script. Included features are:
 
 If I see enough interest, next version will/could include:
 
+ - Full encryption of your configuration parameters in an external config file.
  - Auto-switching of active forging node on detection of a problem on currently active forging node.
  - Daily/Hourly Auto-transfer of forged Lisk in secondary account.
  - Multi-Accounts Daily Balance Reporting
@@ -17,8 +18,7 @@ If I see enough interest, next version will/could include:
  - And more ...
 
 
-###**1 Installation**
---------------
+###**Installation**
 
 Download latest version here: [LiskMonitor-master.zip](https://github.com/Gr33nDrag0n69/LiskMonitor/archive/master.zip)
 
@@ -26,80 +26,79 @@ Extract the zip archive and copy the LiskMonitor.ps1 file to it's final destinat
 
 I recommend saving it near root directory. For example: C:\SCRIPTS\LiskMonitor.ps1
 
-###***2 Configuration, Manual Usage & Testing**
----------------
+###**Configuration, Manual Usage & Testing**
 
-Open the script in your favorite text editor. Basic Notepad WILL work but not recommended.
+Open the script in your favorite text editor. Basic Notepad WILL work but not recommended. I recommend notepad++ available for free [HERE](https://notepad-plus-plus.org/).
 
-I recommend notepad++ available for free [HERE](https://notepad-plus-plus.org/).
+Scroll to line #81
 
-Scroll to line #81 "Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!"
+> Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!
+
 
 The configuration is splitted in 3 sub-sections:
+
  - E-mail
  - MainNet
  - TestNet
 
-####The first thing to configure and test is e-mail sub-section.
+#### **E-mail**
 
+In this section we will configure the address used to send and received the monitoring automatic e-mails.
 
-# Email List support multiple entries like this: @('email@domain.com','sms@domain.com','5556781212l@myphoneprovider.com')
+Config. | Description | Value Example
+------------ | -------------
+SenderEmail | This is the e-mail that will be used as sender by the script. | liskmonitor@mydomain.com
+SenderSmtp | This is the domain or IP address the script will use as SMTP to send messages. | smtp.myinternetprovider.com
+SendErrorMail | Enable/Disable the sending of errors messages. | \$True or \$False
+ErrorEmailList | | @('home@mydomain.com','1234567890@phoneprovider.com')
+SendWarningMail | Enable/Disable the sending of warnings messages. | \$True or \$False
+WarningEmailList | | @('home@mydomain.com')
+SendInfoMail| Enable/Disable the sending of infos messages. | \$True or \$False 
+InfoEmailList | | @('home@mydomain.com')
+ 
+####_About EmailList_
 
-For the e-mail definition, you can use only 1 address for sender and recipient if you want.
-It's build that way to allow more granularity so everybody can customize the behavior to his/her need.
-Example:
+1 entry example:
+> @('email@domain.com')
+
+Multi-entries example:
+> @('email@domain.com','5556781212@myphoneprovider.com')
+
+You can use the same address for sender and recipient if you want.
+
+But you can customize the behavior. Example:
+
  - I put my home e-mail for the info
  - I put my home and work e-mail for warning
  - I put my home and work e-mail + email2sms for error
- 
-email2sms note: Most phone provider have email2sms functionnality. Just check you probably already have an addres looking like 9995551212@YourPhoneProvider.com. It allow text e-mail sent to this address to be redirected as sms to your phone.
 
+####_About InfoEmail_
+Once everything will work, you can safely disable it.
 
-Here is the list of variables and what they do, following is a screenshot of a final configuration example.
- 
-$Config.Email.SenderEmail      This is the e-mail that will be used as sender by the script.
-$Config.Email.SenderSmtp       This is the domain or IP address the script will use as SMTP to send messages.
+####_About "email2sms"_
+Most phone provider have email2sms functionnality. Just check with your provider, you probably already have an addres looking like:
+> 9995551212@YourPhoneProvider.com
 
-$Config.Email.SendErrorMail    This allow to enable/disable the sending of errors messages. I don't recommand to disable it.
-$Config.Email.ErrorEmailList   
-
-$Config.Email.SendWarningMail  = $True
-$Config.Email.WarningEmailList = @('')
-
-$Config.Email.SendInfoMail     This allow to enable/disable the sending of infos messages. Once everything will work, you can safely disable it.
-$Config.Email.InfoEmailList    = @('') 
+It allow text e-mail sent to this address to be redirected as sms to your phone.
  
- 
- 
- 
-In the "### Test | Activate / Deactivate" Sub-section
-
-In the "MainNet | Account" Sub-section
+####**MainNet**
 
 Note:
 Public Key can be left empty, it will be retreived automaticaly.
 Example: $Config.MainNet.Account.PublicKey = ''
 Configuring PublicKey remove 1 api call everytime the script runs...
 
+####**TestNet**
 
-In the "" Sub-section
+TestNet section work the same way, it' made to use same script to monitor both network. For now, lets wait for next TestNet occurence and let it disabled.
 
-In the "" Sub-section
+Now, Save and close the file.
 
-Save and close the file.
+###**Scheduled Task(s) Creation & Testing**
 
-3 
-------------------------
 
-Text text text text text
+###**Troubleshooting & Common Error(s)**
 
-4 Scheduled Task(s) Creation & Testing
---------------------------------------
-
-Text text text text text
-
-5 Troubleshooting & Common Error(s)
-------------------------------------------------------------------------
 **It doesn’t work.**
 
 Verify PowerShell version installed in your computer. Execute the following command:
@@ -137,4 +136,5 @@ Are you currently an active delegate ? You must be in the 101 active delegate to
 
 This ReadMe File was edited using: https://stackedit.io/editor
 Thanxs to Slasheks for his help suggesting this tool.
+
 
