@@ -17,14 +17,16 @@ If I see enough interest, next version will/could include:
  - And more ...
 
 
-1 Installation
+###**1 Installation**
 --------------
-Save the script on your computer. Latest version available [HERE](https://raw.githubusercontent.com/Gr33nDrag0n69/LiskMonitor/master/LiskMonitor.ps1).
 
-For easier access in PowerShell, I recommend saving it near root directory.
-For example: C:\LiskMonitor\LiskMonitor.ps1
+Download latest version here: [LiskMonitor-master.zip](https://github.com/Gr33nDrag0n69/LiskMonitor/archive/master.zip)
 
-2 Configuration
+Extract the zip archive and copy the LiskMonitor.ps1 file to it's final destination.
+
+I recommend saving it near root directory. For example: C:\SCRIPTS\LiskMonitor.ps1
+
+###***2 Configuration**
 ---------------
 
 Open the script in your favorite text editor.
