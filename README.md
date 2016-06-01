@@ -50,10 +50,10 @@ Config.          | Description                                                  
 SenderEmail      | This is the e-mail that will be used as sender by the script.                  | liskmonitor@mydomain.com
 SenderSmtp       | This is the domain or IP address the script will use as SMTP to send messages. | smtp.myinternetprovider.com
 SendErrorMail    | Enable/Disable the sending of errors messages.                                 | \$True or \$False
-ErrorEmailList   | E-mail List                                                                    | @('home@mydomain.com','1234567890@phoneprovider.com')
+ErrorEmailList   | E-mail List                                                                    | @('home@mydomain.com', '1234567890@phoneprovider.com')
 SendWarningMail  | Enable/Disable the sending of warnings messages.                               | \$True or \$False
 WarningEmailList | E-mail List                                                                    | @('home@mydomain.com')
-SendInfoMail     | Enable/Disable the sending of infos messages.                                  | \$True or \$False 
+SendInfoMail     | Enable/Disable the sending of infos messages.                                  | $True or $False 
 InfoEmailList    | E-mail List                                                                    | @('home@mydomain.com')
  
 ####_About EmailList_
