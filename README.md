@@ -1,4 +1,4 @@
- ![##Images_README_Header##](./Images/README_Header.png)
+ ![##Images_README_Header##](./PNG/Header.png)
 
 LiskMonitor is a stand-alone PowerShell script made 100% by me to do end-user monitoring on Lisk MainNet and TestNet nodes and delegates. It uses PowerShell so it run only on Windows but can monitor a node on any type of installation since it uses HTTP protocol to communicate with API. For hardcore Linux users or just people wanting more protection by running more than 1 instance of the script, don’t forget, am inexspansive Windows Server Box can do the job pretty well.
 
