@@ -80,6 +80,20 @@ Most phone provider have email2sms functionnality. Just check with your provider
 > 9995551212@YourPhoneProvider.com
 
 It allow text e-mail sent to this address to be redirected as sms to your phone.
+
+Some existings eaxamples:
+
+
+* AT&T – cellnumber@txt.att.net
+* Verizon – cellnumber@vtext.com
+* T-Mobile – cellnumber@tmomail.net
+* Sprint PCS - cellnumber@messaging.sprintpcs.com
+* Virgin Mobile – cellnumber@vmobl.com
+* US Cellular – cellnumber@email.uscc.net
+* Nextel - cellnumber@messaging.nextel.com
+* Boost - cellnumber@myboostmobile.com
+* Alltel – cellnumber@message.alltel.com
+
  
 ####**MainNet**
 
