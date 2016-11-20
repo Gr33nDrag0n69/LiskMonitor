@@ -8,12 +8,9 @@
 	Output message to screen. (Doesn't affect e-mail functionnality)
 
 .PARAMETER SendTestEmail
-	Send a test e-mail to the configured e-mails for INFO, WARNING and ERROR.
+	Send a test e-mail to the configured e-mails ERROR.
 
-.PARAMETER ShowMainNetPublicKey
-	Internal Helper Tool to find the public key associated to an address.
-
-.PARAMETER ShowTestNetPublicKey
+.PARAMETER ShowPublicKey
 	Internal Helper Tool to find the public key associated to an address.
 
 .EXAMPLE
@@ -32,9 +29,9 @@
 	To execute the script in e-mail test mode.
 	
 .NOTES
-	Version :	1.0.0.0
+	Version :	1.1.0.0
 	Author  :	Gr33nDrag0n
-	History :	2016/05/29 - Last Modification
+	History :	2016/11/20 - Last Modification
 #>
 
 ###########################################################################################################################################
@@ -50,10 +47,7 @@ Param(
 	[switch] $SendTestEmail,
 	
 	[parameter( Mandatory=$False )]
-	[switch] $ShowMainNetPublicKey,
-	
-	[parameter( Mandatory=$False )]
-	[switch] $ShowTestNetPublicKey
+	[switch] $ShowPublicKey
 	)
 
 ###########################################################################################################################################
@@ -69,67 +63,53 @@ $error.Clear()
 
 $Script:Config = @{}
 $Config.Email = @{}
-$Config.MainNet = @{}
-$Config.MainNet.Account = @{}
-$Config.MainNet.Nodes = @()
-$Config.TestNet = @{}
-$Config.TestNet.Account = @{}
-$Config.TestNet.Nodes = @()
-$Private:Banner = "LiskMonitor v1.0 | Vote for gr33ndrag0n Delegate | Donation: 7829179317180986041L"
+$Config.Account = @{}
+$Config.Nodes = @()
+$Private:Banner = "LiskMonitor v1.1 by Gr33nDrag0n"
 
 #######################################################################################################################
 # Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!
 #######################################################################################################################
 
+### Monitoring ###============================================================================
+
+$Config.MonitoringEnabled = $True
+$Config.MonitorNodeBlockHeight = $True
+# Warning: You Delegate must have Forging Enabled on 1 of your node to enable this feature.
+$Config.MonitorDelegateForgingStatus = $True
+# Warning: You must be and "Active Delegate" to enable this feature.
+$Config.MonitorDelegateLastForgedBlockAge = $True
+
 ### E-Mail ###===============================================================================
 
-# Email List support multiple entries like this: @('email@domain.com','sms@domain.com','5556781212l@myphoneprovider.com')
-
-$Config.Email.SenderEmail      = ''
-$Config.Email.SenderSmtp       = ''
+$Config.Email.SenderEmail      = 'liskmonitor@mydomain.com'
+# Same SMTP address you would use in your e-mail client
+$Config.Email.SenderSmtp       = 'smtp.myISP.com'
 
 $Config.Email.SendErrorMail    = $True
-$Config.Email.ErrorEmailList   = @('')
+$Config.Email.ErrorEmailList   = @('myemail@domain.com','5556781212@myphoneprovider.com')
 
-$Config.Email.SendWarningMail  = $True
-$Config.Email.WarningEmailList = @('')
+### Account ###===========================================================================================
 
-$Config.Email.SendInfoMail     = $True
-$Config.Email.InfoEmailList    = @('')
+$Config.Account.Delegate  = ''
+$Config.Account.PublicKey = ''
+$Config.Account.Address   = ''
 
-### MainNet ###===============================================================================
+# Account Example
 
-$Config.MainNet.MonitoringEnabled = $True
-$Config.MainNet.MonitorNodeBlockHeight = $True
-# Warning: You Delegate must have Forging Enabled on one of your node to enable this feature.
-$Config.MainNet.MonitorDelegateForgingStatus = $True
-# Warning: You must be and "Active Delegate" to enable this feature.
-$Config.MainNet.MonitorDelegateLastForgedBlockAge = $False
+#$Config.Account.Delegate  = 'gr33ndrag0n'
+#$Config.Account.PublicKey = 'ad936990fb57f7e686763c293e9ca773d1d921888f5235189945a10029cd95b0'
+#$Config.Account.Address   = '194109334904015388L'
 
-$Config.MainNet.Account.Delegate  = ''
-$Config.MainNet.Account.PublicKey = ''
-$Config.MainNet.Account.Address   = ''
+### Node(s) ###=======================================================================================
 
-$Config.MainNet.Nodes += @{Name='lisknode.io';URI='https://lisknode.io/'}
-#$Config.MainNet.Nodes += @{Name='';URI='https:///'}
+$Config.Nodes += @{Name='';URI=''}
 
-### TestNet ###===============================================================================
+# Node(s) Example
 
-# Warning: Do NOT activate TestNet Monitoring until re-launch of next version !
+#$Config.Nodes += @{Name='explorer.lisknode.io';URI='http://explorer.lisknode.io:8000/'}
+#$Config.Nodes += @{Name='snapshot.lisknode.io';URI='http://snapshot.lisknode.io:8000/'}
 
-$Config.TestNet.MonitoringEnabled = $False
-$Config.TestNet.MonitorNodeBlockHeight	= $True
-# Warning: You Delegate must have Forging Enabled on one of your node to enable this feature.
-$Config.TestNet.MonitorDelegateForgingStatus = $True
-# Warning: You must be and "Active Delegate" to enable this feature.
-$Config.TestNet.MonitorDelegateLastForgedBlockAge = $False
-
-$Config.TestNet.Account.Delegate  = ''
-$Config.TestNet.Account.PublicKey = ''
-$Config.TestNet.Account.Address   = ''
-
-$Config.TestNet.Nodes += @{Name='lisktestnet.pw';URI='https://lisktestnet.pw/'}
-#$Config.TestNet.Nodes += @{Name='';URI='https:///'}
 
 ###########################################################################################################################################
 # FUNCTIONS
@@ -139,12 +119,12 @@ Function Get-LiskAccountPublicKey {
 
     [CmdletBinding()]
     Param(
-		[parameter(Mandatory = $True)]
-		[System.String] $URI,
-		
-        [parameter(Mandatory = $True)]
-		[System.String] $Address
-        )
+      [parameter(Mandatory = $True)]
+      [System.String] $URI,
+
+      [parameter(Mandatory = $True)]
+      [System.String] $Address
+      )
 	
 	$Private:Output = Invoke-LiskApiCall -Method Get -URI $( $URI+'api/accounts/getPublicKey?address='+$Address )
 	if( $Output.success -eq $True ) { $Output.publicKey }
@@ -173,33 +153,33 @@ Function Get-LiskBlockList {
 
     [CmdletBinding()]
     Param(
-        [parameter(Mandatory = $True)]
-		[System.String] $URI,
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $TotalFee='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $TotalAmount='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $PreviousBlock='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $Height='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $GeneratorPublicKey='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $Limit='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $Offset='',
-		
-        [parameter(Mandatory = $False)]
-		[System.String] $OrderBy=''
-        )
+      [parameter(Mandatory = $True)]
+      [System.String] $URI,
+
+      [parameter(Mandatory = $False)]
+      [System.String] $TotalFee='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $TotalAmount='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $PreviousBlock='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $Height='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $GeneratorPublicKey='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $Limit='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $Offset='',
+
+      [parameter(Mandatory = $False)]
+      [System.String] $OrderBy=''
+      )
 
 	if( ( $TotalFee -eq '' ) -and ( $TotalAmount -eq '' ) -and ( $PreviousBlock -eq '' ) -and ( $Height -eq '' ) -and ( $GeneratorPublicKey -eq '' ) -and ( $Limit -eq '' ) -and ( $Offset -eq '' ) -and ( $OrderBy -eq '' ) )
 	{
@@ -311,39 +291,13 @@ Function Invoke-LiskApiCall {
 
 ###########################################################################################################################################
 
-Function SendInfoMail {
-
-	Param(
-		[parameter( Mandatory=$True, Position=1 )]
-		[System.String] $Message
-		)
-		
-	$Private:Subject = 'LiskMonitor INFO'
-	Send-MailMessage -SmtpServer $Script:Config.Email.SenderSmtp -From $Script:Config.Email.SenderEmail -To $Script:Config.Email.InfoEmailList -Subject $Subject -Body $Message
-}
-
-###########################################################################################################################################
-
-Function SendWarningMail {
-
-	Param(
-		[parameter( Mandatory=$True, Position=1 )]
-		[System.String] $Message
-		)
-		
-	$Private:Subject = 'LiskMonitor WARNING'
-	Send-MailMessage -SmtpServer $Script:Config.Email.SenderSmtp -From $Script:Config.Email.SenderEmail -To $Script:Config.Email.WarningEmailList -Subject $Subject -Body $Message -Priority High
-}
-
-###########################################################################################################################################
-
 Function SendErrorMail {
 	Param(
 		[parameter( Mandatory=$True, Position=1 )]
 		[System.String] $Message
 		)
 		
-	$Private:Subject = 'LiskMonitor ERROR'
+	$Private:Subject = 'LiskMonitor'
 	Send-MailMessage -SmtpServer $Script:Config.Email.SenderSmtp -From $Script:Config.Email.SenderEmail -To $Script:Config.Email.ErrorEmailList -Subject $Subject -Body $Message -Priority High
 }
 
@@ -354,14 +308,9 @@ Function CheckNodeBlockHeight {
 	[CmdletBinding()]
 	Param(
 		[parameter( Mandatory=$True, Position=1 )]
-		[ValidateSet("MainNet","TestNet")]
-		[System.String] $Net,
-		
-		[parameter( Mandatory=$True, Position=2 )]
 		[System.String] $URI
 		)
 
-	$Private:WarningThresholdInSeconds = 120
 	$Private:ErrorThresholdInSeconds = 300
 	
 	$Private:BlockHeight = 0
@@ -375,13 +324,10 @@ Function CheckNodeBlockHeight {
 		$Private:Block = Get-LiskBlockList -URI $URI -Height $BlockHeight
 		if( $Block -ne $NULL )
 		{
-			if( $Net -eq 'MainNet' ) { $Private:GenesisTimestamp = Get-Date "5/24/2016 5:00 PM" }
-			elseif( $Net -eq 'TestNet' ) { $Private:GenesisTimestamp = Get-Date "4/9/2015" }
-
-			$BlockAgeInSeconds = [math]::Round( $( (Get-date)-([timezone]::CurrentTimeZone.ToLocalTime(($GenesisTimestamp).Addseconds($Block.timestamp))) ).TotalSeconds )
+			$Private:GenesisTimestamp = Get-Date "5/24/2016 5:00 PM"
+			$BlockAgeInSeconds = [math]::Round( $( (Get-date)-([timezone]::CurrentTimeZone.ToLocalTime($GenesisTimestamp.Addseconds($Block.timestamp))) ).TotalSeconds )
 
 			if( $BlockAgeInSeconds -ge $ErrorThresholdInSeconds ) { $Message = "ERROR: Node Block Age is > $ErrorThresholdInSeconds sec. Value: $BlockAgeInSeconds sec." }
-			elseif( $BlockAgeInSeconds -ge $WarningThresholdInSeconds ) { $Message = "WARNING: Node Block Age is > $WarningThresholdInSeconds sec. Value: $BlockAgeInSeconds sec." }
 			else { $Message = "SUCCESS: Node in SYNC. Block Age is $BlockAgeInSeconds sec." }
 		}
 		else { $Message = "ERROR: Get-LiskBlockList Result is NULL." }
@@ -398,18 +344,13 @@ Function CheckDelegateLastForgedBlockAge {
 [CmdletBinding()]
 Param(
 	[parameter( Mandatory=$True, Position=1 )]
-	[ValidateSet("MainNet","TestNet")]
-	[System.String] $Net,
-	
-	[parameter( Mandatory=$True, Position=2 )]
 	[System.String] $URI,
 	
-	[parameter( Mandatory=$True, Position=3 )]
+	[parameter( Mandatory=$True, Position=2 )]
 	[System.Collections.Hashtable] $Account
 	)
 
-	$Private:WarningThresholdInMinutes = 30
-	$Private:ErrorThresholdInMinutes = 45
+	$Private:ErrorThresholdInMinutes = 90
 
 	$Private:BlockHeight = 0
 	$Private:BlockAgeInMinutes = 0
@@ -419,10 +360,10 @@ Param(
 	if( $LastForgedBlock -ne $NULL )
 	{
 		$BlockHeight = $LastForgedBlock.Height
-		$BlockAgeInMinutes = [math]::Round( $( (Get-date)-([timezone]::CurrentTimeZone.ToLocalTime(([datetime]'4/9/2015').Addseconds($LastForgedBlock.timestamp))) ).TotalMinutes )
+		$Private:GenesisTimestamp = Get-Date "5/24/2016 5:00 PM"
+		$BlockAgeInMinutes = [math]::Round( $( (Get-date)-([timezone]::CurrentTimeZone.ToLocalTime($GenesisTimestamp.Addseconds($LastForgedBlock.timestamp))) ).TotalMinutes )
 		
 		if( $BlockAgeInMinutes -ge $ErrorThresholdInMinutes ) { $Message = "ERROR: $Net Delegate $($Account.Delegate) Last Forged Block Age is > $ErrorThresholdInMinutes minutes. Value: $BlockAgeInMinutes minutes." }
-		elseif( $BlockAgeInMinutes -ge $WarningThresholdInMinutes ) { $Message = "WARNING: $Net Delegate $($Account.Delegate) Last Forged Block Age is > $WarningThresholdInMinutes minutes. Value: $BlockAgeInMinutes minutes." }
 		else { $Message = "SUCCESS: $Net Delegate $($Account.Delegate) Last Forged Block Age is $BlockAgeInMinutes minutes." }
 	}
 	else { $Message = "ERROR: Get-LiskBlockList Result is NULL. Verify you are part of the 101 currently Active Delegate." }
@@ -434,32 +375,24 @@ Param(
 # MAIN
 ###########################################################################################################################################
 
-if( $ShowMainNetPublicKey )
+if( $ShowPublicKey )
 {
 	Write-Host "`r`n$Banner`r`n" -ForegroundColor Green
-	Write-Host "MainNet Public Key Associated to Address: $($Config.MainNet.Account.Address)"
-	Write-Host $( Get-LiskAccountPublicKey -Address $Config.MainNet.Account.Address -URI $Config.MainNet.Nodes[0].URI )
 	Write-Host ''
-}
-elseif( $ShowTestNetPublicKey )
-{
-	Write-Host "`r`n$Banner`r`n" -ForegroundColor Green
-	Write-Host "TestNet Public Key Associated to Address: $($Config.MainNet.Account.Address)"
-	Write-Host $( Get-LiskAccountPublicKey -Address $Config.TestNet.Account.Address -URI $Config.TestNet.Nodes[0].URI )
+	Write-Host "Delegate:  $($Config.Account.Delegate)"
+	Write-Host "Address:   $($Config.Account.Address)"
+	Write-Host ''
+	Write-Host "Public Key:"
+	Write-Host ''
+	Write-Host $( Get-LiskAccountPublicKey -Address $Config.Account.Address -URI $Config.Nodes[0].URI )
 	Write-Host ''
 }
 elseif( $SendTestEmail )
 {
 	Write-Host "`r`n$Banner`r`n`r`n" -ForegroundColor Green
-	Write-Host 'Sending Test Emails...'
+	Write-Host 'Sending Test Email(s)...'
 	
-	if( $Config.Email.SendInfoMail -eq $True ) { SendInfoMail -Message 'LiskMonitor (SendTestEmail) INFO' }
-	else { Write-Host '$Config.Email.SendInfoMail is set to False, Skipping INFO Email Test.' }
-	
-	if( $Config.Email.SendWarningMail -eq $True ) { SendWarningMail -Message 'LiskMonitor (SendTestEmail) WARNING' }
-	else { Write-Host '$Config.Email.SendWarningMail is set to False, Skipping WARNING Email Test.' }
-	
-	if( $Config.Email.SendErrorMail -eq $True ) { SendErrorMail -Message 'LiskMonitor (SendTestEmail) ERROR' }
+	if( $Config.Email.SendErrorMail -eq $True ) { SendErrorMail -Message 'LiskMonitor (SendTestEmail)' }
 	else { Write-Host '$Config.Email.SendErrorMail is set to False, Skipping ERROR Email Test.' }
 	
 	Write-Host "Done`r`n"
@@ -470,69 +403,59 @@ else
 	
 	$Private:Header = ''
 	$Private:Message = ''
-	$Private:InfoMessages = ''
-	$Private:WarningMessages = ''
 	$Private:ErrorMessages = ''
 	
-	### MainNet ###================================================================================================
-	
-	if( $Config.MainNet.MonitoringEnabled -eq $True )
+	if( $Config.MonitoringEnabled -eq $True )
 	{
-		if( $Config.MainNet.MonitorNodeBlockHeight -eq $True )
+		if( $Config.MonitorNodeBlockHeight -eq $True )
 		{
-			ForEach( $Private:Node in $Config.MainNet.Nodes )
+			ForEach( $Private:Node in $Config.Nodes )
 			{
-				$Header = "MainNet | Node Block Height | $($Node.Name) |"
-				$Message = CheckNodeBlockHeight -Net MainNet -URI $Node.URI
+				$Header = "Node Block Height | $($Node.Name) |"
+				$Message = CheckNodeBlockHeight -URI $Node.URI
 				
-				if( $Message -like "SUCCESS:*" ) { $InfoMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "WARNING:*" ) { $WarningMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
+				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
 				
 				if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
 			}
 		}
 		
-		if( $Config.MainNet.MonitorDelegateForgingStatus -eq $True )
+		if( $Config.MonitorDelegateForgingStatus -eq $True )
 		{
-			if( $Config.MainNet.Account.PublicKey -eq '' )
+			if( $Config.Account.PublicKey -eq '' )
 			{
-				$Config.MainNet.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.MainNet.Account.Address -URI $Config.MainNet.Nodes[0].URI
+				$Config.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.Account.Address -URI $Config.Nodes[0].URI
 			}
 
-			$Header = "MainNet | Delegate Forging Status |"
-			$Private:Message = "ERROR: $Net Delegate $($Config.MainNet.Account.Delegate) is NOT Forging !"
+			$Header = "Delegate Forging Status |"
+			$Private:Message = "ERROR: $Net Delegate $($Config.Account.Delegate) is NOT Forging !"
 
-			ForEach( $Private:Node in $Config.MainNet.Nodes )
+			ForEach( $Private:Node in $Config.Nodes )
 			{
-				if( $( Get-LiskDelegateForgingStatus -URI $Node.URI -PublicKey $Config.MainNet.Account.PublicKey ) -eq $True )
+				if( $( Get-LiskDelegateForgingStatus -URI $Node.URI -PublicKey $Config.Account.PublicKey ) -eq $True )
 				{
-					$Message = "SUCCESS: Delegate $($Config.MainNet.Account.Delegate) is Forging on $($Node.Name)"
+					$Message = "SUCCESS: Delegate $($Config.Account.Delegate) is Forging on $($Node.Name)"
 				}
 			}
 			
-			if( $Message -like "SUCCESS:*" ) { $InfoMessages += "$Header $Message`r`n`r`n" }
-			elseif( $Message -like "WARNING:*" ) { $WarningMessages += "$Header $Message`r`n`r`n" }
-			elseif( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
+			if( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
 			
 			if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
 		}
 		
-		if( $Config.MainNet.MonitorDelegateLastForgedBlockAge -eq $True )
+		if( $Config.MonitorDelegateLastForgedBlockAge -eq $True )
 		{
-			if( $Config.MainNet.Account.PublicKey -eq '' )
+			if( $Config.Account.PublicKey -eq '' )
 			{
-				$Config.MainNet.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.MainNet.Account.Address -URI $Config.MainNet.Nodes[0].URI
+				$Config.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.Account.Address -URI $Config.Nodes[0].URI
 			}
 
-			ForEach( $Private:Node in $Config.MainNet.Nodes )
+			ForEach( $Private:Node in $Config.Nodes )
 			{
-				$Header = "MainNet | Delegate Last Forged Block Age | $($Node.Name) |"
-				$Message = CheckDelegateLastForgedBlockAge -Net MainNet -URI $Node.URI -Account $Config.MainNet.Account
+				$Header = "Delegate Last Forged Block Age | $($Node.Name) |"
+				$Message = CheckDelegateLastForgedBlockAge -URI $Node.URI -Account $Config.Account
 				
-				if( $Message -like "SUCCESS:*" ) { $InfoMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "WARNING:*" ) { $WarningMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
+				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
 				
 				if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
 			}
@@ -540,114 +463,11 @@ else
 	}
 	else
 	{
-		if( $ShowMessage ) { Write-Host "MainNet Monitoring Disabled, Skipping Section.`r`n" }
+		if( $ShowMessage ) { Write-Host "Monitoring Disabled, Skipping Section.`r`n" }
 	}
 	
-	### TestNet ###================================================================================================
-	
-	if( $Config.TestNet.MonitoringEnabled -eq $True )
-	{
-		if( $Config.TestNet.MonitorNodeBlockHeight -eq $True )
-		{
-			ForEach( $Private:Node in $Config.TestNet.Nodes )
-			{
-				$Header = "TestNet | Node Block Height | $($Node.Name) |"
-				$Message = CheckNodeBlockHeight -Net TestNet -URI $Node.URI
-				
-				if( $Message -like "SUCCESS:*" ) { $InfoMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "WARNING:*" ) { $WarningMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
-				
-				if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
-			}
-		}
-		
-		if( $Config.TestNet.MonitorDelegateForgingStatus -eq $True )
-		{
-			if( $Config.TestNet.Account.PublicKey -eq '' )
-			{
-				$Config.TestNet.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.TestNet.Account.Address -URI $Config.TestNet.Nodes[0].URI
-			}
-
-			$Header = "TestNet | Delegate Forging Status |"
-			$Private:Message = "ERROR: $Net Delegate $($Config.TestNet.Account.Delegate) is NOT Forging !"
-
-			ForEach( $Private:Node in $Config.TestNet.Nodes )
-			{
-				if( $( Get-LiskDelegateForgingStatus -URI $Node.URI -PublicKey $Config.TestNet.Account.PublicKey ) -eq $True )
-				{
-					$Message = "SUCCESS: Delegate $($Config.TestNet.Account.Delegate) is Forging on $($Node.Name)"
-				}
-			}
-			
-			if( $Message -like "SUCCESS:*" ) { $InfoMessages += "$Header $Message`r`n`r`n" }
-			elseif( $Message -like "WARNING:*" ) { $WarningMessages += "$Header $Message`r`n`r`n" }
-			elseif( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
-			
-			if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
-		}
-		
-		if( $Config.TestNet.MonitorDelegateLastForgedBlockAge -eq $True )
-		{
-			if( $Config.TestNet.Account.PublicKey -eq '' )
-			{
-				$Config.TestNet.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.TestNet.Account.Address -URI $Config.TestNet.Nodes[0].URI
-			}
-
-			ForEach( $Private:Node in $Config.TestNet.Nodes )
-			{
-				$Header = "TestNet | Delegate Last Forged Block Age | $($Node.Name) |"
-				$Message = CheckDelegateLastForgedBlockAge -Net TestNet -URI $Node.URI -Account $Config.TestNet.Account
-				
-				if( $Message -like "SUCCESS:*" ) { $InfoMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "WARNING:*" ) { $WarningMessages += "$Header $Message`r`n`r`n" }
-				elseif( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
-				
-				if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
-			}
-		}
-	}
-	else
-	{
-		if( $ShowMessage ) { Write-Host "TestNet Monitoring Disabled, Skipping Section.`r`n" }
-	}
-
 	### E-mail Reporting ###=======================================================================================
 
-	if( $Config.Email.SendInfoMail -eq $True )
-	{
-		if( $InfoMessages -ne '' )
-		{
-			if( $ShowMessage ) { Write-Host "INFO Message(s) Detected, Sending E-mail.`r`n" }
-			SendInfoMail -Message $InfoMessages
-		}
-		else
-		{
-			if( $ShowMessage ) { Write-Host "No INFO message(s), Skipping E-mail.`r`n" }
-		}
-	}
-	else
-	{
-		if( $ShowMessage ) { Write-Host 'SendInfoMail = $False, Skipping Email.`r`n' }
-	}
-	
-	if( $Config.Email.SendWarningMail -eq $True )
-	{
-		if( $WarningMessages -ne '' )
-		{
-			if( $ShowMessage ) { Write-Host "WARNING Message(s) Detected, Sending E-mail.`r`n" }
-			SendWarningMail -Message $WarningMessages
-		}
-		else
-		{
-			if( $ShowMessage ) { Write-Host "No WARNING message(s), Skipping E-mail.`r`n" }
-		}
-	}
-	else
-	{
-		if( $ShowMessage ) { Write-Host 'SendWarningMail = $False, Skipping E-mail.`r`n' }
-	}
-	
 	if( $Config.Email.SendErrorMail -eq $True )
 	{
 		if( $ErrorMessages -ne '' )
@@ -672,24 +492,21 @@ else
 
 Remove-Variable -Name Banner -ErrorAction SilentlyContinue
 Remove-Variable -Name Config -ErrorAction SilentlyContinue
-Remove-Variable -Name SendTestEmail -ErrorAction SilentlyContinue
-Remove-Variable -Name ShowMainNetPublicKey -ErrorAction SilentlyContinue
-Remove-Variable -Name ShowMessage -ErrorAction SilentlyContinue
-Remove-Variable -Name ShowTestNetPublicKey -ErrorAction SilentlyContinue
 Remove-Variable -Name ErrorMessages -ErrorAction SilentlyContinue
 Remove-Variable -Name foreach -ErrorAction SilentlyContinue
 Remove-Variable -Name Header -ErrorAction SilentlyContinue
-Remove-Variable -Name InfoMessages -ErrorAction SilentlyContinue
 Remove-Variable -Name Message -ErrorAction SilentlyContinue
 Remove-Variable -Name Node -ErrorAction SilentlyContinue
-Remove-Variable -Name WarningMessages -ErrorAction SilentlyContinue
+Remove-Variable -Name SendTestEmail -ErrorAction SilentlyContinue
+Remove-Variable -Name ShowMessage -ErrorAction SilentlyContinue
+Remove-Variable -Name ShowPublicKey -ErrorAction SilentlyContinue
 
 $Private:CurrentSessionVariable_List = Get-Variable | Select-Object -ExpandProperty Name
 
 $Private:PowerShellDefaultVariables = @('$','?','^','args','ConfirmPreference','ConsoleFileName','DebugPreference','Error','ErrorActionPreference','ErrorView','ExecutionContext','false','FormatEnumerationLimit','HOME','Host','input',
 'MaximumAliasCount','MaximumDriveCount','MaximumErrorCount','MaximumFunctionCount','MaximumHistoryCount','MaximumVariableCount','MyInvocation','NestedPromptLevel','null','OutputEncoding','PID','PROFILE','ProgressPreference',
 'PSBoundParameters','PSCmdlet','PSCommandPath','PSCulture','PSDefaultParameterValues','PSEmailServer','PSHOME','PSScriptRoot','PSSessionApplicationName','PSSessionConfigurationName','PSSessionOption','PSUICulture','PSVersionTable',
-'PWD','ShellId','StackTrace','true','VerbosePreference','WarningPreference','WhatIfPreference')
+'PWD','ShellId','StackTrace','true','VerbosePreference','WarningPreference','WhatIfPreference','InformationPreference','PSEdition')
 
 $Private:FreeMemoryVariableFound = $False
 
@@ -698,13 +515,13 @@ ForEach( $Private:CurrentSessionVariable in $CurrentSessionVariable_List )
 	if( $CurrentSessionVariable -notin $PowerShellDefaultVariables )
 	{
 		$FreeMemoryVariableFound = $True
-		#Write-Host "Remove-Variable -Name $CurrentSessionVariable -ErrorAction SilentlyContinue"
+		Write-Host "Remove-Variable -Name $CurrentSessionVariable -ErrorAction SilentlyContinue"
 	}
 }
 
 if( $FreeMemoryVariableFound -eq $True )
 {
-	#Write-Host "Free Memory | Variable(s) Found. If it was created by script execution, edit 'Free Memory' section."
+	Write-Host "Free Memory | Variable(s) Found. If it was created by script execution, edit 'Free Memory' section."
 }
 
 Remove-Variable -Name FreeMemoryVariableFound -ErrorAction SilentlyContinue

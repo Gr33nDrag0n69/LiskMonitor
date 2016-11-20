@@ -1,62 +1,64 @@
  ![##Images_README_Header##](./PNG/Header.png)
 
-LiskMonitor is a stand-alone PowerShell script to do end-user monitoring on Lisk MainNet and TestNet nodes and delegates. It uses PowerShell so it run only on Windows but can monitor a node on any type of installation since it uses HTTP protocol to communicate with API.
+LiskMonitor is a stand-alone PowerShell script to do end-user monitoring on Lisk MainNet Node(s) and Delegate. It uses PowerShell so it run only on Windows but can monitor a node on any type of installation since it uses HTTP protocol to communicate with API.
 
-This is v1.0.0.x of the script. Included features are:
+Included features are:
 
  - Monitoring Block Height of every provided nodes URLs.
  - Monitoring Last Forged Block Height of configured delegate on all provided nodes URLs.
  - Monitoring Delegate Forging Status on all provided URLs.
 
-If I see enough interest, next version will/could include:
+Current Threshold values are 300 seconds for last block age and 90 minutes for last forged block age.
 
- - Full encryption of your configuration parameters in an external config file.
- - Auto-switching of active forging node on detection of a problem on currently active forging node.
- - Daily/Hourly Auto-transfer of forged Lisk in secondary account.
- - Multi-Accounts Daily Balance Reporting
- - Monitoring Port Accessibility and Latency Problem of all provided URLs.
- - And more ...
+If you like it, please vote for me on Lisk MainNet for Delegate or I accept donation. :)
 
+Delegate: Gr33nDrag0n / Address: 17688865274499765764S
 
-###**Installation**
+##**Installation**
 
-Download latest version here: [LiskMonitor-master.zip](https://github.com/Gr33nDrag0n69/LiskMonitor/archive/master.zip)
+Save a copy of LiskMonitor.ps1
 
-Extract the zip archive and copy the LiskMonitor.ps1 file to it's final destination.
+This README use this path C:\Scripts\LiskMonitor.ps1, adjust accordingly if you use something else.
 
-I recommend saving it near root directory. For example: C:\SCRIPTS\LiskMonitor.ps1
-
-###**Configuration, Manual Usage & Testing**
+##**Configuration, Manual Usage & Testing**
 
 Open the script in your favorite text editor. Basic Notepad WILL work but not recommended. I recommend notepad++ available for free [HERE](https://notepad-plus-plus.org/).
 
-Scroll to line #81
+Scroll to line #71
 
 > Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!
 
 
-The configuration is splitted in 3 sub-sections:
+The configuration is splitted in sub-sections:
 
+ - Monitoring
  - E-mail
- - MainNet
- - TestNet
+ - Account
+ - Nodes
 
-#### **E-mail**
+### **Configuring Monitoring Section**
+
+This script can test 3 things:
+
+ - All nodes blockheight
+ - Delegate forging status
+ - Delegate last forged block age
+
+This section allow disabling a specific test.
+
+
+### **Configuring E-mail Section**
 
 In this section we will configure the address used to send and received the monitoring automatic e-mails.
 
 Config.          | Description                                                                    | Value Example
 ------------     | -------------                                                                  | -------------
-SenderEmail      | This is the e-mail that will be used as sender by the script.                  | = 'liskmonitor@mydomain.com'
+SenderEmail      | This is the e-mail that will be used as sender by the script.                  | = 'LiskMonitor@mydomain.com'
 SenderSmtp       | This is the domain or IP address the script will use as SMTP to send messages. | = 'smtp.myinternetprovider.com'
 SendErrorMail    | Enable/Disable the sending of errors messages.                                 | = $True
 ErrorEmailList   | E-mail List                                                                    | = @('home@mydomain.com', '1234567890@phoneprovider.com')
-SendWarningMail  | Enable/Disable the sending of warnings messages.                               | = $True
-WarningEmailList | E-mail List                                                                    | = @('home@mydomain.com')
-SendInfoMail     | Enable/Disable the sending of infos messages.                                  | = $False 
-InfoEmailList    | E-mail List                                                                    | = @('home@mydomain.com')
  
-####_About EmailList_
+###_About EmailList_
 
 1 entry example:
 > @('email@domain.com')
@@ -66,52 +68,67 @@ Multi-entries example:
 
 You can use the same address for sender and recipient if you want.
 
-But you can customize the behavior. Example:
-
- - I put my home e-mail for the info
- - I put my home and work e-mail for warning
- - I put my home and work e-mail + email2sms for error
-
-####_About InfoEmail_
-Once everything will work, you can safely disable it.
-
-####_About "email2sms"_
+###_About "email2sms"_
 Most phone provider have email2sms functionnality. Just check with your provider, you probably already have an addres looking like:
 > 9995551212@YourPhoneProvider.com
 
 It allow text e-mail sent to this address to be redirected as sms to your phone.
 
-Some existings eaxamples:
-
-
-* AT&T – cellnumber@txt.att.net
-* Verizon – cellnumber@vtext.com
-* T-Mobile – cellnumber@tmomail.net
-* Sprint PCS - cellnumber@messaging.sprintpcs.com
-* Virgin Mobile – cellnumber@vmobl.com
-* US Cellular – cellnumber@email.uscc.net
-* Nextel - cellnumber@messaging.nextel.com
-* Boost - cellnumber@myboostmobile.com
-* Alltel – cellnumber@message.alltel.com
-
  
-####**MainNet**
+###**Configuring Account Section**
 
-Note:
-Public Key can be left empty, it will be retreived automaticaly.
-Example: $Config.MainNet.Account.PublicKey = ''
-Configuring PublicKey remove 1 api call everytime the script runs...
-
-####**TestNet**
-
-TestNet section work the same way, it' made to use same script to monitor both network. For now, lets wait for next TestNet occurence and let it disabled.
-
-Now, Save and close the file.
-
-###**Scheduled Task(s) Creation & Testing**
+Add your Delegate Name and Address. There is a function later to get the public key. See included example.
 
 
-###**Troubleshooting & Common Error(s)**
+###**Configuring Nodes Section**
+
+Add the name and http address of all your nodes. See included examples.
+
+
+#### Retreive Public Key
+
+`.\LiskMonitor.ps1 -ShowPublicKey`
+
+![##Images_README_Header##](./PNG/ShowPublicKey.png)
+
+Edit the script again to add the public key in the Delegate configuration.
+
+#### Test E-mail Configuration
+
+`.\LiskMonitor.ps1 -SendTestEmail`
+
+![##Images_README_Header##](./PNG/SendTestEmail.png)
+
+#### Run manually the check
+
+`.\LiskMonitor.ps1 -ShowMessage`
+
+![##Images_README_Header##](./PNG/ShowMessage.png)
+
+##**Scheduled Task(s) Creation & Testing**
+
+The script do a check and send e-mail if necessary.
+
+It's not a program, so like you would use crontab in Linux, you need to use Task Scheduler in Windows
+
+Open Task Scheduler and Create a New Task. (Use Full GUI not the Wizard)
+
+General -> Name: LiskMonitor
+
+General -> Execute even if user is not connected
+
+Trigger -> New
+
+			* One time
+			* Repeat each "5 minutes" for a duration of "infinity"
+			
+Action  -> New
+
+			* Command:          C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+			* Arguments:        C:\Scripts\LiskMonitor.ps1
+			* WorkingDirectory: C:\Scripts\
+
+##**Troubleshooting & Common Error(s)**
 
 **It doesn’t work.**
 
@@ -126,29 +143,12 @@ When done re-run the test to confirm your version is now v4.x or upper.
 
 **Script work but communication with server fail.**
 
-Verify the configuration of the server (config,json) to allow your IP address in the whitelist section. Don’t forget to restart your lisk client to update the configuration.
+Verify the configuration of the server (config,json) to allow your IP address in the whitelist section. Don’t forget to restart your Lisk client to update the configuration.
 
 **Script is asking confirmation to execute when running it.**
 
-Verify PowerShell execution policy for your user profile. To do that, use:
-
-> Get-ExecutionPolicy 
-
-If execution policy is set to ??? change default value to ? qith the following command:
-
-> Set-ExecutionPolicy
-
-**You want to use PublicKey for the delegate configuration but you only know your address?**
-
-> .\LiskMonitor.ps1 -ShowPublicKey ##ADDRESS##
+`Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass`
 
 **Using "Delegate Last Forged Block Age" You Receive "ERROR: Get-LiskBlockList Result is NULL."**
 
 Are you currently an active delegate ? You must be in the 101 active delegate to forge block.
-
-
-
-This ReadMe File was edited using: https://stackedit.io/editor
-Thanxs to Slasheks for his help suggesting this tool.
-
-
