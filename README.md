@@ -12,7 +12,7 @@ Current Threshold values are 300 seconds for last block age and 90 minutes for l
 
 If you like it, please vote for me on Lisk MainNet for Delegate or I accept donation. :)
 
-Delegate: Gr33nDrag0n / Address: 17688865274499765764S
+Delegate: Gr33nDrag0n / Address: 194109334904015388L
 
 ##**Installation**
 
