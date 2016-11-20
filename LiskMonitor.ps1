@@ -311,7 +311,7 @@ Function CheckNodeBlockHeight {
 		[System.String] $URI
 		)
 
-	$Private:ErrorThresholdInSeconds = 300
+	$Private:ErrorThresholdInSeconds = 180
 	
 	$Private:BlockHeight = 0
 	$Private:BlockAgeInSeconds = 0
@@ -350,7 +350,7 @@ Param(
 	[System.Collections.Hashtable] $Account
 	)
 
-	$Private:ErrorThresholdInMinutes = 90
+	$Private:ErrorThresholdInMinutes = 40
 
 	$Private:BlockHeight = 0
 	$Private:BlockAgeInMinutes = 0

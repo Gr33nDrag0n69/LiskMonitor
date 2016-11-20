@@ -8,7 +8,7 @@ Included features are:
  - Monitoring Last Forged Block Height of configured delegate on all provided nodes URLs.
  - Monitoring Delegate Forging Status on all provided URLs.
 
-Current Threshold values are 300 seconds for last block age and 90 minutes for last forged block age.
+Current Threshold values are 180 seconds for last block age and 40 minutes for last forged block age.
 
 If you like it, please vote for me on Lisk MainNet for Delegate or I accept donation. :)
 
