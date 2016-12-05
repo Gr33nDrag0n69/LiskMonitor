@@ -4,11 +4,12 @@ LiskMonitor is a stand-alone PowerShell script to do end-user monitoring on Lisk
 
 Included features are:
 
- - Monitoring Block Height of every provided nodes URLs.
+ - Monitoring Last Block Age of every provided nodes URLs.
+ - Monitoring Last Block Height of every provided nodes URLs.
  - Monitoring Last Forged Block Height of configured delegate on all provided nodes URLs.
  - Monitoring Delegate Forging Status on all provided URLs.
 
-Current Threshold values are 180 seconds for last block age and 40 minutes for last forged block age.
+Current Threshold values are 120 seconds for last block age, 5 blocks lag on public nodes and 40 minutes for last forged block age.
 
 If you like it, please vote for me on Lisk MainNet for Delegate or I accept donation. :)
 
@@ -38,9 +39,10 @@ The configuration is splitted in sub-sections:
 
 ### **Configuring Monitoring Section**
 
-This script can test 3 things:
+This script can test 4 things:
 
- - All nodes blockheight
+ - All nodes last block age (Age in seconds of the last received block)
+ - All nodes last block height (Is it lagging compared to public nodes)
  - Delegate forging status
  - Delegate last forged block age
 

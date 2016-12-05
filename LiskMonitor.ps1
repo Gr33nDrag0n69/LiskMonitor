@@ -13,6 +13,8 @@
 .PARAMETER ShowPublicKey
 	Internal Helper Tool to find the public key associated to an address.
 
+.PARAMETER TestNet
+
 .EXAMPLE
 	.\LiskMonitor.ps1
 	
@@ -29,9 +31,9 @@
 	To execute the script in e-mail test mode.
 	
 .NOTES
-	Version :	1.1.0.0
+	Version :	1.2.0.0
 	Author  :	Gr33nDrag0n
-	History :	2016/11/20 - Last Modification
+	History :	2016/12/04 - Last Modification
 #>
 
 ###########################################################################################################################################
@@ -47,7 +49,10 @@ Param(
 	[switch] $SendTestEmail,
 	
 	[parameter( Mandatory=$False )]
-	[switch] $ShowPublicKey
+	[switch] $ShowPublicKey,
+	
+	[parameter( Mandatory=$False )]
+	[switch] $TestNet
 	)
 
 ###########################################################################################################################################
@@ -65,7 +70,8 @@ $Script:Config = @{}
 $Config.Email = @{}
 $Config.Account = @{}
 $Config.Nodes = @()
-$Private:Banner = "LiskMonitor v1.1 by Gr33nDrag0n"
+$Config.PublicNodes = @()
+$Private:Banner = "LiskMonitor v1.2 [2016-12-04] by Gr33nDrag0n"
 
 #######################################################################################################################
 # Configurable Variables | MANDATORY !!! EDIT THIS SECTION !!!
@@ -110,6 +116,44 @@ $Config.Nodes += @{Name='';URI=''}
 #$Config.Nodes += @{Name='explorer.lisknode.io';URI='http://explorer.lisknode.io:8000/'}
 #$Config.Nodes += @{Name='snapshot.lisknode.io';URI='http://snapshot.lisknode.io:8000/'}
 
+### Public Node(s) ###=======================================================================================
+
+if( $TestNet )
+{
+  $Config.PublicNodes += @{Name='gr33ndrag0n';URI='http://testnet-wallet.lisknode.io:7000/'}
+  $Config.PublicNodes += @{Name='isabella';URI='http://testnet.liskwallet.net:7000/'}
+  $Config.PublicNodes += @{Name='polycrypto';URI='http://test01.polycrypto.tech:7000/'}
+  $Config.PublicNodes += @{Name='metal494_new';URI='http://testnet.lisknode.com.ar:7000/'}
+  $Config.PublicNodes += @{Name='tharude-1';URI='http://test-pri.lskwallet.space:7000/'}
+  $Config.PublicNodes += @{Name='tharude-2';URI='http://test-bak.lskwallet.space:7000/'}
+  $Config.PublicNodes += @{Name='phoenix1969';URI='http://lisk.testwallet.online:7000/'}
+}
+else
+{
+  $Config.PublicNodes += @{Name='gr33ndrag0n';URI='http://wallet.lisknode.io:8000/'}
+  $Config.PublicNodes += @{Name='vipertkd';URI='http://lisk-login.vipertkd.com:8000/'}
+  $Config.PublicNodes += @{Name='corsaro';URI='http://liskworld.info:8000/'}
+  #$Config.PublicNodes += @{Name='lamar';URI='http://lisk.multiwallet.online:8000/'}
+  $Config.PublicNodes += @{Name='metal494_new';URI='http://lisknode.com.ar:8000/'}
+  $Config.PublicNodes += @{Name='isabella';URI='http://login.liskwallet.net:8000/'}
+  $Config.PublicNodes += @{Name='polycrypto';URI='http://lisk.polycrypto2.tech:8000/'}
+
+  $Config.PublicNodes += @{Name='tharude-1';URI='http://01.lskwallet.space:8000/'}
+  #$Config.PublicNodes += @{Name='tharude-2';URI='http://02.lskwallet.space:8000/'}
+  $Config.PublicNodes += @{Name='tharude-3';URI='http://03.lskwallet.space:8000/'}
+  #$Config.PublicNodes += @{Name='tharude-4';URI='http://04.lskwallet.space:8000/'}
+  $Config.PublicNodes += @{Name='tharude-5';URI='http://05.lskwallet.space:8000/'}
+  #$Config.PublicNodes += @{Name='tharude-6';URI='http://06.lskwallet.space:8000/'}
+  #$Config.PublicNodes += @{Name='tharude-7';URI='http://07.lskwallet.space:8000/'}
+  #$Config.PublicNodes += @{Name='tharude-8';URI='http://08.lskwallet.space:8000/'}
+
+  $Config.PublicNodes += @{Name='phoenix1969-1';URI='http://lisk.liskwallet.io:8000/'}
+  $Config.PublicNodes += @{Name='phoenix1969-2';URI='http://lisk.fastwallet.online:8000/'}
+  #$Config.PublicNodes += @{Name='phoenix1969-3';URI='http://lisk.fastwallet2.online:8000/'}
+  #$Config.PublicNodes += @{Name='phoenix1969-4';URI='http://lisk.fastwallet3.online:8000/'}
+  #$Config.PublicNodes += @{Name='phoenix1969-5';URI='http://lisk.fastwallet4.online:8000/'}
+  #$Config.PublicNodes += @{Name='phoenix1969-6';URI='http://lisk.fastwallet5.online:8000/'}
+}
 
 ###########################################################################################################################################
 # FUNCTIONS
@@ -303,7 +347,69 @@ Function SendErrorMail {
 
 ###########################################################################################################################################
 
-Function CheckNodeBlockHeight {
+Function GetPublicNodesHighestBlock {
+
+	[CmdletBinding()]
+	Param(
+		[parameter( Mandatory=$True, Position=1 )]
+		$PublicNodeList
+		)
+
+  $Private:TopHeight = 0
+  
+  ForEach( $Private:PublicNode in $PublicNodeList )
+  {
+    $Private:SyncStatus = Get-LiskSyncStatus -URI $PublicNode.URI
+    if( $SyncStatus -ne $NULL )
+    {
+      if( $TopHeight -lt $SyncStatus.Height ) { $TopHeight = $SyncStatus.Height }
+      $Message = $( $($PublicNode.Name).PadRight(20,' ') )+'| '+$( $($PublicNode.URI).PadRight(45,' ') )+'| '+$($SyncStatus.Height)
+    }
+    else
+    {
+      $Message = $( $($PublicNode.Name).PadRight(20,' ') )+'| '+$( $($PublicNode.URI).PadRight(45,' ') )+'| NULL'
+    }
+    
+    if( $ShowMessage ) { Write-Host $Message }
+  }
+
+	$TopHeight
+}
+
+###########################################################################################################################################
+
+Function CheckNodeLastBlockLag {
+
+	[CmdletBinding()]
+	Param(
+		[parameter( Mandatory=$True, Position=1 )]
+		[System.String] $URI,
+    
+		[parameter( Mandatory=$True, Position=2 )]
+		[System.Int32] $TopHeight
+		)
+
+	$Private:ErrorThresholdInBlocks = 5
+	
+	$Private:BlockHeightLag = 0
+	$Private:Message = ''
+	
+	$Private:SyncStatus = Get-LiskSyncStatus -URI $URI
+	if( $SyncStatus -ne $NULL )
+	{
+		$BlockHeightLag = $TopHeight - $SyncStatus.Height
+    
+    if( $BlockHeightLag -ge $ErrorThresholdInBlocks ) { $Message = "ERROR: Node Block Lag '$BlockHeightLag' is > $ErrorThresholdInBlocks" }
+    else { $Message = "SUCCESS: Node in SYNC. Block Lag is $BlockHeightLag block(s)" }
+	}
+	else { $Message = "ERROR: Get-LiskSyncStatus Result is NULL." }
+
+	$Message
+}
+
+###########################################################################################################################################
+
+Function CheckNodeLastBlockAge {
 
 	[CmdletBinding()]
 	Param(
@@ -311,7 +417,7 @@ Function CheckNodeBlockHeight {
 		[System.String] $URI
 		)
 
-	$Private:ErrorThresholdInSeconds = 180
+	$Private:ErrorThresholdInSeconds = 120
 	
 	$Private:BlockHeight = 0
 	$Private:BlockAgeInSeconds = 0
@@ -409,38 +515,39 @@ else
 	{
 		if( $Config.MonitorNodeBlockHeight -eq $True )
 		{
-			ForEach( $Private:Node in $Config.Nodes )
-			{
-				$Header = "Node Block Height | $($Node.Name) |"
-				$Message = CheckNodeBlockHeight -URI $Node.URI
-				
-				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
-				
-				if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
-			}
-		}
-		
-		if( $Config.MonitorDelegateForgingStatus -eq $True )
-		{
-			if( $Config.Account.PublicKey -eq '' )
-			{
-				$Config.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.Account.Address -URI $Config.Nodes[0].URI
-			}
+      # Fetching TopHeight from public nodes
+      if( $ShowMessage ) { Write-Host "Checking Public Nodes Top Height`r`n" -ForegroundColor Cyan }
+      $Private:TopHeight = GetPublicNodesHighestBlock -PublicNodeList $Config.PublicNodes
+      if( $ShowMessage ) { Write-Host "`r`nPublic Nodes Top Height : $TopHeight`r`n" -ForegroundColor Cyan }
 
-			$Header = "Delegate Forging Status |"
-			$Private:Message = "ERROR: $Net Delegate $($Config.Account.Delegate) is NOT Forging !"
-
-			ForEach( $Private:Node in $Config.Nodes )
+			# Test individual nodes last block lag
+      
+      ForEach( $Private:Node in $Config.Nodes )
 			{
-				if( $( Get-LiskDelegateForgingStatus -URI $Node.URI -PublicKey $Config.Account.PublicKey ) -eq $True )
-				{
-					$Message = "SUCCESS: Delegate $($Config.Account.Delegate) is Forging on $($Node.Name)"
-				}
+				$Private:EmailHeader = 'Node Last Block Lag | '+$($Node.Name)+'|'
+        $Private:MessageHeader = $($('Node Last Block Lag').PadRight(35,' ')) +'| '+$($($Node.Name).PadRight(30,' '))+'|'
+				$Message = CheckNodeLastBlockLag -URI $Node.URI -TopHeight $TopHeight
+				
+				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$EmailHeader $Message`r`n`r`n" }
+				
+				if( $ShowMessage ) { Write-Host "$MessageHeader $Message" }
 			}
-			
-			if( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
-			
-			if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
+      if( $ShowMessage ) { Write-Host '' }
+
+			# Test individual nodes last block age
+      
+      ForEach( $Private:Node in $Config.Nodes )
+			{
+				$Private:EmailHeader = 'Node Last Block Age | '+$($Node.Name)+'|'
+        $Private:MessageHeader = $($('Node Last Block Age').PadRight(35,' ')) +'| '+$($($Node.Name).PadRight(30,' '))+'|'
+				$Message = CheckNodeLastBlockAge -URI $Node.URI
+				
+				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$EmailHeader $Message`r`n`r`n" }
+				
+				if( $ShowMessage ) { Write-Host "$MessageHeader $Message" }
+			}
+      if( $ShowMessage ) { Write-Host '' }
+      
 		}
 		
 		if( $Config.MonitorDelegateLastForgedBlockAge -eq $True )
@@ -452,18 +559,45 @@ else
 
 			ForEach( $Private:Node in $Config.Nodes )
 			{
-				$Header = "Delegate Last Forged Block Age | $($Node.Name) |"
+        $Private:EmailHeader = 'Delegate Last Forged Block Age | '+$($Node.Name)+'|'
+        $Private:MessageHeader = $($('Delegate Last Forged Block Age').PadRight(35,' ')) +'| '+$($($Node.Name).PadRight(30,' '))+'|'
 				$Message = CheckDelegateLastForgedBlockAge -URI $Node.URI -Account $Config.Account
 				
-				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$Header $Message`r`n`r`n" }
+				if( $Message -like "ERROR:*" ) { $ErrorMessages += "$EmailHeader $Message`r`n`r`n" }
 				
-				if( $ShowMessage ) { Write-Host "$Header $Message`r`n" }
+				if( $ShowMessage ) { Write-Host "$MessageHeader $Message" }
 			}
+      if( $ShowMessage ) { Write-Host '' }
+		}
+		
+		if( $Config.MonitorDelegateForgingStatus -eq $True )
+		{
+			if( $Config.Account.PublicKey -eq '' )
+			{
+				$Config.Account.PublicKey = Get-LiskAccountPublicKey -Address $Config.Account.Address -URI $Config.Nodes[0].URI
+			}
+
+			$Header = "Delegate Forging Status |"
+      $Private:EmailHeader = 'Delegate Forging Status | '+$($Node.Name)+'|'
+      $Private:MessageHeader = $($('Delegate Forging Status').PadRight(67,' ')) +'|'
+			$Private:Message = "ERROR: $Net Delegate $($Config.Account.Delegate) is NOT Forging !"
+
+			ForEach( $Private:Node in $Config.Nodes )
+			{
+				if( $( Get-LiskDelegateForgingStatus -URI $Node.URI -PublicKey $Config.Account.PublicKey ) -eq $True )
+				{
+					$Message = "SUCCESS: Delegate $($Config.Account.Delegate) is Forging on $($Node.Name)"
+				}
+			}
+			
+			if( $Message -like "ERROR:*" ) { $ErrorMessages += "$EmailHeader $Message`r`n`r`n" }
+			
+			if( $ShowMessage ) { Write-Host "$MessageHeader $Message" }
 		}
 	}
 	else
 	{
-		if( $ShowMessage ) { Write-Host "Monitoring Disabled, Skipping Section.`r`n" }
+		if( $ShowMessage ) { Write-Host "Monitoring Disabled, Skipping Section.`r`n" -ForegroundColor Yellow }
 	}
 	
 	### E-mail Reporting ###=======================================================================================
@@ -472,17 +606,17 @@ else
 	{
 		if( $ErrorMessages -ne '' )
 		{
-			if( $ShowMessage ) { Write-Host "ERROR Message(s) Detected, Sending E-mail.`r`n" }
+			if( $ShowMessage ) { Write-Host "`r`nERROR Message(s) Detected, Sending E-mail/SMS.`r`n" -ForegroundColor Red }
 			SendErrorMail -Message $ErrorMessages
 		}
 		else
 		{
-			if( $ShowMessage ) { Write-Host "No ERROR message(s), Skipping E-mail.`r`n" }
+			if( $ShowMessage ) { Write-Host "`r`nNo ERROR message(s), Skipping E-mail/SMS.`r`n" -ForegroundColor Green }
 		}
 	}
 	else
 	{
-		if( $ShowMessage ) { Write-Host 'SendErrorMail = $False, Skipping Email.`r`n' }
+		if( $ShowMessage ) { Write-Host '`r`nSendErrorMail = $False, Skipping Email/SMS.`r`n' -ForegroundColor Yellow }
 	}
 }
 
@@ -500,6 +634,10 @@ Remove-Variable -Name Node -ErrorAction SilentlyContinue
 Remove-Variable -Name SendTestEmail -ErrorAction SilentlyContinue
 Remove-Variable -Name ShowMessage -ErrorAction SilentlyContinue
 Remove-Variable -Name ShowPublicKey -ErrorAction SilentlyContinue
+Remove-Variable -Name TopHeight -ErrorAction SilentlyContinue
+Remove-Variable -Name EmailHeader -ErrorAction SilentlyContinue
+Remove-Variable -Name MessageHeader -ErrorAction SilentlyContinue
+Remove-Variable -Name TestNet -ErrorAction SilentlyContinue
 
 $Private:CurrentSessionVariable_List = Get-Variable | Select-Object -ExpandProperty Name
 
