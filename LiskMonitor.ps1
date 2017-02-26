@@ -31,9 +31,9 @@
 	To execute the script in e-mail test mode.
 	
 .NOTES
-	Version :	1.2.0.0
+	Version :	1.2.0.1
 	Author  :	Gr33nDrag0n
-	History :	2016/12/04 - Last Modification
+	History :	2017/02/26 - Last Modification
 #>
 
 ###########################################################################################################################################
@@ -316,12 +316,12 @@ Function Invoke-LiskApiCall {
 	if( $Method -eq 'Get' )
 	{
 		Write-Verbose "Invoke-LiskApiCall [$Method] => $URI"
-		$Private:WebRequest = Invoke-WebRequest -Uri $URI -Method $Method
+		$Private:WebRequest = Invoke-WebRequest -UseBasicParsing -Uri $URI -Method $Method
 	}
 	elseif( ( $Method -eq 'Post' ) -or ( $Method -eq 'Put' ) )
 	{
 		Write-Verbose "Invoke-LiskApiCall [$Method] => $URI"
-		$Private:WebRequest = Invoke-WebRequest -Uri $URI -Method $Method -Body $Body
+		$Private:WebRequest = Invoke-WebRequest -UseBasicParsing -Uri $URI -Method $Method -Body $Body
 	}
 	
 	if( ( $WebRequest.StatusCode -eq 200 ) -and ( $WebRequest.StatusDescription -eq 'OK' ) )
